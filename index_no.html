@@ -17,6 +17,15 @@
         }
       });
     </script>
+	<style>
+	.auto-wrap-pre {
+	  white-space: pre-wrap; /* 保留空白，並在需要時換行 */
+	  word-wrap: break-word; /* 允許長單詞在單詞內斷行 */
+	  width: 300px; /* 範例，限制寬度以顯示換行效果 */
+	  border: 1px solid #ccc; /* 範例，顯示邊界 */
+	  padding: 10px;
+	}
+</style>
   </head>
 
   <body style="text-align: center;">
@@ -72,9 +81,9 @@
     <div id="output" style="width: 100vw; max-width: 300px; text-align: justify; margin: 0 auto">
       <div id="content"></div>
       <div id="status"></div>
-      <pre id="log" style="font-size: 58px;"></pre>
+      <pre id="log" class="auto-wrap-pre" style="font-size: 68px;"></pre>
     </div>
-	<button id="scanButton" style="font-size: 1.5rem">返回</button> 
+
     <script>
       if (/Chrome\/(\d+\.\d+.\d+.\d+)/.test(navigator.userAgent)) {
         // Let's log a warning if the sample is not supposed to execute on this
@@ -107,7 +116,7 @@
 
           ndef.addEventListener("reading", ({ message, serialNumber }) => {
             //log(`> Serial Number: ${serialNumber}`);
-			log("成功請求延長");
+			log("綠燈剩餘秒數過短，無法延長");
             //log(`> Records: (${message.records.length})`);
           });
         } catch (error) {
