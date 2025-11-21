@@ -76,7 +76,6 @@
     </div>
 
     <script>
-	
       if (/Chrome\/(\d+\.\d+.\d+.\d+)/.test(navigator.userAgent)) {
         // Let's log a warning if the sample is not supposed to execute on this
         // version of Chrome.
@@ -89,10 +88,8 @@
     <script>
       log = ChromeSamples.log;
 
-      if (!("NDEFReader" in window)){
-	  
+      if (!("NDEFReader" in window))
         ChromeSamples.setStatus("裝置不支援 Web NFC");
-		}
     </script>
 
     <script>
@@ -107,51 +104,6 @@
           ndef.addEventListener("readingerror", () => {
             log("無法讀取，請更換 NFC Tag");
           });
-
-		ndef.onreading = event => {
-				const message = event.message;
-				for (const record of message.records) {
-				  if (record.recordType === 'text') {
-					const textDecoder = new TextDecoder(record.encoding);
-					console.log('Text record:', textDecoder.decode(record.data));
-				  }
-				  // Handle other record types (e.g., URL, MIME) as needed
-				}
-			  };
-		ndef.addEventListener("reading", ({ message, serialNumber }) => {
-			  log(`> Serial Number: ${serialNumber}`);
-			  log(`> Records:(${message.records.length})`);
-			});
-			  
-		//另一種寫網址
-			const ndef = new NDEFReader();
-			ndef.write({
-			  records: [{ recordType: "url", data: "https://w3c.github.io/web-nfc/" }]
-			}).then(() => {
-			  console.log("Message written.");
-			}).catch(error => {
-			  console.log(`Write failed :-( try again: ${error}.`);
-			});
-		//NDEFMessage：records 属性
-			  ndefReaderInst.onreading = (event) => {
-				  const ndefMessage = event.message;
-				  for (const record of ndefMessage.records) {
-					console.log(`记录类型：  ${record.recordType}`);
-					console.log(`MIME 类型： ${record.mediaType}`);
-					console.log(`记录 id：   ${record.id}`);
-					switch (record.recordType) {
-					  case "text":
-						// TODO：使用记录数据、语言和编码读取文本记录。
-						break;
-					  case "url":
-						// TODO：读取带有记录数据的 URL 记录。
-						break;
-					  default:
-					  // TODO：使用记录数据处理其他记录。
-					}
-				  }
-				};
-
 
           ndef.addEventListener("reading", ({ message, serialNumber }) => {
             log(`> Serial Number: ${serialNumber}`);
