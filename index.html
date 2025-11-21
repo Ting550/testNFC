@@ -34,7 +34,7 @@
       <br />
     </p>
 
-    <button id="scanButton" style="font-size: 1.5rem">掃描</button> <button id="BACK" style="font-size: 1.5rem">返回</button>
+    <button id="scanButton" style="font-size: 1.5rem">掃描</button> 
     <script>
       var ChromeSamples = {
         log: function () {
@@ -106,9 +106,9 @@
           });
 
           ndef.addEventListener("reading", ({ message, serialNumber }) => {
-            //log(`> Serial Number: ${serialNumber}`);
-			log("成功請求延長");
-            //log(`> Records: (${message.records.length})`);
+            log(`> Serial Number: ${serialNumber}`);
+			//log("成功請求延長");
+            log(`> Records: (${message.records.length})`);
           });
         } catch (error) {
           log("錯誤:" + error);
