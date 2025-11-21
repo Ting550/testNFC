@@ -72,7 +72,7 @@
     <div id="output" style="width: 100vw; max-width: 300px; text-align: justify; margin: 0 auto">
       <div id="content"></div>
       <div id="status"></div>
-      <pre id="log" style="font-size: 20px;"></pre>
+      <pre id="log" style="font-size: 68px;"></pre>
     </div>
 
     <script>
@@ -106,9 +106,9 @@
           });
 
           ndef.addEventListener("reading", ({ message, serialNumber }) => {
-            log(`> Serial Number: ${serialNumber}`);
-			//log("成功請求延長");
-            log(`> Records: (${message.records.length})`);
+            //log(`> Serial Number: ${serialNumber}`);
+			log("成功請求延長");
+            //log(`> Records: (${message.records.length})`);
           });
         } catch (error) {
           log("錯誤:" + error);
