@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>敬老愛心號誌服務</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/framework7@8/css/bundle.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/framework7@8/js/bundle.min.js"></script>
+    <style>
+        body { background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .title-bar { background: linear-gradient(90deg, #007bff, #0056b3); color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
+        .content { padding: 20px; text-align: center; }
+        .btn-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: 20px 0; }
+        .nfc-btn { background: #28a745; color: white; border: none; padding: 15px 30px; font-size: 16px; border-radius: 25px; width: 100%; max-width: 300px; }
+        .nfc-btn:hover { background: #218838; }
+        .status-div { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: 20px 0; min-height: 80px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .warning-icon { font-size: 24px; color: #ffc107; margin-right: 10px; }
+        .road-info { background: #e8f5e8 !important; color: #155724; border: 2px solid #28a745; font-size: 18px; font-weight: bold; }
+        .error-div { background: #f8d7da !important; color: #721c24; border: 2px solid #dc3545; }
+        .checkmark { font-size: 32px; color: #28a745; margin-right: 10px; }
+        .loading { color: #007bff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <!-- App root element -->
+    <div id="app">
+        <!-- Pages -->
+        <div class="page">
+            <div class="page-content">
+                <div class="title-bar">敬老愛心號誌服務</div>
+                
+                <div class="content">
+                    <div class="btn-container">
+                        <button class="nfc-btn button button-large" id="nfcBtn">點擊開啟感應花博卡</button>
+                    </div>
+                    
+                    <div id="deviceInfo" class="status-div">
+                        <span class="warning-icon">⚠️</span>
+                        裝置資訊，僅支援Android手機Chrome 89+版本以上瀏覽器，並支援NFC技術
+                    </div>
+                    
+                    <div id="scanStatus" class="status-div" style="display: none;">
+                        請感應花博卡
+                    </div>
+                    
+                    <!-- 中間路口資訊 div -->
+                    <div id="roadInfo" class="status-div" style="display: none;"></div>
+                    
+                    <!-- 下方結果 div -->
+                    <div id="resultDiv" class="status-div" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Framework7 初始化
+        var app = new Framework7({
+            root: '#app',
+            name: 'NFCApp',
+            id: 'com.nfc.app',
+            theme: 'auto',
+            routes: []
+        });
+        
+        var mainView = app.views.create('.view');
+        
+        let nfcReader = null;
+        // 指定花博卡 serial number (小寫冒號格式)
+        const VALID_NFC_SERIAL = "04:51:0c:a5:45:02:89";
+        
+        // Framework7 事件綁定
+        document.addEventListener('pageInit', function (e) {
+            const btn = document.getElementById('nfcBtn');
+            btn.addEventListener('click', startNFC);
+        });
+        
+        async function startNFC() {
+            try {
+                // 檢查支援性
+                if (!('NDEFReader' in window)) {
+                    app.dialog.alert('此瀏覽器不支援 Web NFC，請使用 Android Chrome 89+');
+                    return;
+                }
+
+                const btn = document.getElementById('nfcBtn');
+                const deviceInfo = document.getElementById('deviceInfo');
+                const scanStatus = document.getElementById('scanStatus');
+
+                // 隱藏裝置資訊，顯示掃描狀態
+                deviceInfo.style.display = 'none';
+                scanStatus.style.display = 'flex';
+                btn.disabled = true;
+                btn.textContent = '感應中...';
+
+                // 初始化 NDEFReader
+                nfcReader = new NDEFReader();
+                
+                // 開始掃描 (10秒超時)
+                await nfcReader.scan({ signal: AbortSignal.timeout(10000) });
+                
+                nfcReader.onreading = async (event) => {
+                    // 取得 NFC serial number (小寫冒號格式)
+                    let nfcSerial = event.serialNumber;
+                    
+                    // 確保 serial number 是小寫冒號格式
+                    if (nfcSerial && typeof nfcSerial === 'string') {
+                        nfcSerial = nfcSerial.toLowerCase().replace(/:/g, ':').trim();
+                    } else {
+                        nfcSerial = '未知';
+                    }
+                    
+                    scanStatus.style.display = 'none';
+                    
+                    if (nfcSerial === VALID_NFC_SERIAL) {
+                        // 正確的花博卡 - 顯示路口資訊 + 綠燈延長
+                        showRoadInfo();
+                        showSuccessResult(nfcSerial);
+                    } else {
+                        // 錯誤卡片
+                        showErrorResult(nfcSerial);
+                    }
+                    
+                    resetUI();
+                };
+                
+            } catch (error) {
+                console.error('NFC錯誤:', error);
+                app.dialog.alert('NFC掃描失敗: ' + error.message);
+                resetUI();
+            }
+        }
+        
+        function showRoadInfo() {
+            const roadInfo = document.getElementById('roadInfo');
+            roadInfo.innerHTML = '中山北路/南京東路路口<br>提供主要幹道行人燈延長服務';
+            roadInfo.className = 'status-div road-info';
+            roadInfo.style.display = 'flex';
+        }
+        
+        function showSuccessResult(nfcSerial) {
+            const resultDiv = document.getElementById('resultDiv');
+            resultDiv.innerHTML = `
+                <span class="checkmark">✅</span>
+                已延長當前綠燈
+            `;
+            resultDiv.className = 'status-div';
+            resultDiv.style.display = 'flex';
+        }
+        
+        function showErrorResult(nfcSerial) {
+            const resultDiv = document.getElementById('resultDiv');
+            resultDiv.innerHTML = `
+                錯誤!!非指定花博卡<br>
+                偵測到: ${nfcSerial}<br>
+                預期: ${VALID_NFC_SERIAL}
+            `;
+            resultDiv.className = 'status-div error-div';
+            resultDiv.style.display = 'flex';
+        }
+        
+        function resetUI() {
+            setTimeout(() => {
+                const btn = document.getElementById('nfcBtn');
+                const scanStatus = document.getElementById('scanStatus');
+                const roadInfo = document.getElementById('roadInfo');
+                const resultDiv = document.getElementById('resultDiv');
+                
+                btn.disabled = false;
+                btn.textContent = '點擊開啟感應花博卡';
+                scanStatus.style.display = 'none';
+                roadInfo.style.display = 'none';
+                resultDiv.style.display = 'none';
+                
+                if (nfcReader) {
+                    nfcReader.cancel();
+                    nfcReader = null;
+                }
+            }, 8000); // 8秒後重置
+        }
+    </script>
+</body>
+</html>
